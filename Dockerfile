@@ -1,28 +1,25 @@
-FROM elventear/supervisord:latest
+FROM ubuntu:latest
 
-MAINTAINER Pepe Barbe <dev@antropoide.net>
+MAINTAINER "Andrew Rothstein" <andrew.rothstein@gmail.com>
 
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y software-properties-common 
-
-RUN add-apt-repository -y ppa:transmissionbt/ppa && \
-    apt-get update && \
-    apt-get install -y transmission-daemon
+ENV TRANSMISSION_VER 2.84
+RUN apt-get -y update ;\
+ apt-get -y install wget build-essential automake autoconf libtool pkg-config intltool libcurl4-openssl-dev libglib2.0-dev libevent-dev libminiupnpc-dev libappindicator-dev ;\
+ wget https://transmission.cachefly.net/transmission-${TRANSMISSION_VER}.tar.xz ;\
+ tar xvf transmission-${TRANSMISSION_VER}.tar.xz ;\
+ cd transmission-${TRANSMISSION_VER} ;\
+ ./configure -q ;\
+ make -s ;\
+ make install ;\
+ rm -rf transmission-${TRANSMISSION_VER} transmission-${TRANSMISSION_VER}.tar.xz
 
 ADD files/transmission-daemon /etc/transmission-daemon
 ADD files/run_transmission.sh /run_transmission.sh
-
-RUN mkdir -p /var/lib/transmission-daemon/incomplete && \
-    chown -R debian-transmission: /var/lib/transmission-daemon && \
-    chown -R debian-transmission: /etc/transmission-daemon    
 
 VOLUME ["/var/lib/transmission-daemon/downloads"]
 VOLUME ["/var/lib/transmission-daemon/incomplete"]
 
 EXPOSE 9091
 EXPOSE 12345
-
-USER debian-transmission
 
 CMD ["/run_transmission.sh"]
